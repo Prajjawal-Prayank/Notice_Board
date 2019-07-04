@@ -68,7 +68,10 @@ app.use(function(err, req, res, next) {
 });
 
 
-
+port = 3000;
+app.listen(port,function(){
+  console.log("app running");
+});
 
 
 module.exports = app;
