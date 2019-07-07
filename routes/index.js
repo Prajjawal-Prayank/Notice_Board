@@ -9,7 +9,7 @@ var fs=require('fs');
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('home', { code:0 });           
+  res.render('admin_login',{code:0});          
 });
 
 
