@@ -111,9 +111,10 @@ function check(code)
               {
                 body += '<button class="accordion" id="'+i+'">'+ notices[i].subject +'</button><div class="panel"><p>'+ notices[i].body +'<br><br>' ;
                     if(notices[i].path!="")
-                    {
-                        var path= notices[i].path.slice(28);
-                        body+= '<a href="'+ path + '">Click Here</a> to see Attachment.' ;
+                    {               
+                      body+='<form method="post" action="/show_r">';
+                      body+='<input type="text" style="display: none;" value="'+notices[i].subject+'" name="subject">';  
+                      body+= '<button type="submit">Click Here</button> to download Attachment.</form>' ;
                     }
                     body+='<button  class="actr" onclick="display1('+i+')"  style="width:auto;right: 0px;float:right;">Remove Notice</button>';
                     body+='<button  class="actm" onclick="display2('+i+')"  style="width:auto;right: 0px;float:right;">Move to Student Notice</button>';
@@ -208,4 +209,12 @@ function display3(i)
 </script>
 
 </body>
+<!--
+if(notices[i].path!="")
+                    {
+                      var path= notices[i].path.slice(28);
+                        body+= '<a href="'+ path + '">Click Here</a> to see Attachment.' ;
+                    }
+
+-->
 </html>

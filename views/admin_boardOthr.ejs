@@ -56,8 +56,9 @@ function check(code)
             body += '<button class="accordion" id="'+i+'">'+ notices[i].subject +'</button><div class="panel"><p>'+ notices[i].body +'<br><br>' ;
                 if(notices[i].path!="")
                 {
-                    var path= notices[i].path.slice(28);
-                    body+= '<a href="'+ path + '">Click Here</a> to see Attachment.' ;
+                  body+='<form method="post" action="/show_o">';
+                  body+='<input type="text" style="display: none;" value="'+notices[i].subject+'" name="subject">';  
+                  body+= '<button type="submit">Click Here</button> to download Attachment.</form>' ;
                 }
                 body+='<button class="act" onclick="display('+i+')" style="width:auto;right: 0px;float:right;">Remove Notice</button>';
                 body+= '</p></div>';

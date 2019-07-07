@@ -4,6 +4,7 @@ var bcrypt=require('bcrypt');
 var saltRounds=9;
 var passport=require('passport');
 var LocalStrategy = require('passport-local').Strategy;
+var fs=require('fs');
 
 
 /* GET home page. */
@@ -56,19 +57,21 @@ router.post('/signup',function(req,res){
     
 
     else  //1
-    {
+    {    
       var db=req.db;
-      var collection=db.get('userlist');    //userlist is the name of the collection
+      var dbo=db.db("temp_project");
+      //var collection=db.get('userlist');    //userlist is the name of the collection
+      var collection=dbo.collection("userlist");
 
       var query1={username:username};
       var query2={email:email};
-      collection.find(query1,function(err,result){       //check for similar username
+      collection.find(query1).toArray(function(err,result){       //check for similar username
    
           if(err) 
             console.log("error in finding similar username");
           else if(result.length==0)                       //username not taken ;check for email     
           {
-            collection.find(query2,{email:1},function(error,result_e){        //check for similar email id
+            collection.find(query2,{email:1}).toArray(function(error,result_e){        //check for similar email id
               if(err)
                 console.log("error in finding similar email id");
               else if(result_e.length==0)              //email id is also unique.PROCEED to enter data in database
@@ -213,10 +216,11 @@ passport.use(new LocalStrategy({
 },
   function(req,username, password, done) {
     var db=req.db;
-    var collection=db.get('userlist');
+    var dbo=db.db("temp_project");
+    var collection=dbo.collection('userlist');
       collection.find({
         username: username
-      }, function(err, user) {  
+      }).toArray(function(err, user) {  
         if (err) {
           return done(err);
         }
@@ -281,19 +285,20 @@ router.post('/changeUser',function(req,res){
   else 
   {
     var db=req.db;
-    var collection=db.get('userlist');
-    var collection2=db.get('student_notices');
+    var dbo=db.db("temp_project");
+    var collection=dbo.collection('userlist');
+    var collection2=dbo.collection('student_notices');
     var username=req.body.username;
-    collection2.find({},function(err,docs){
+    collection2.find({}).toArray(function(err,docs){
       if(err)
         console.log("error in find");
-        collection.find({username:username},function(err,result){
+        collection.find({username:username}).toArray(function(err,result){
           if(err)
             console.log("error in fetching user.");
           if(result.length!=0)
             res.render('student_notice',{notices:docs,code:2,username}); //Username already Taken.
           else{
-            collection.update({username:req.user[0].username},{$set:{username:username}},function(err){
+            collection.updateOne({username:req.user[0].username},{$set:{username:username}},function(err){
               if(err)
                 console.log("Error in updating Username");
                 req.user[0].username=username;
@@ -312,13 +317,14 @@ router.post('/changeEmail',function(req,res){
   else 
   {
     var db=req.db;
-    var collection=db.get('userlist');
-    var collection2=db.get('student_notices');
+    var dbo=db.db("temp_project");
+    var collection=dbo.collection('userlist');
+    var collection2=dbo.collection('student_notices');
     var email=req.body.email;
-    collection2.find({},function(err,docs){
+    collection2.find({}).toArray(function(err,docs){
       if(err)
         console.log("error in find");
-      collection.find({email:email},function(err,result){
+      collection.find({email:email}).toArray(function(err,result){
         if(err)
             console.log("error in fetching user.");
         if(result.length!=0)  
@@ -329,7 +335,7 @@ router.post('/changeEmail',function(req,res){
           if(result1!=email)
               res.render("student_notice",{notices:docs,code:10,email});   //not a valid email-id
           else{
-            collection.update({username:req.user[0].username},{$set:{email:email}},function(err){
+            collection.updateOne({username:req.user[0].username},{$set:{email:email}},function(err){
               if(err)
                   console.log("Error in updating Email-Id");
                 req.user[0].email=email;    
@@ -349,16 +355,17 @@ router.post('/changePass',function(req,res){
   else 
   {
     var db=req.db;
-    var collection=db.get('userlist');
-    var collection2=db.get('student_notices');
-    collection2.find({},function(err,docs){
+    var dbo=db.db("temp_project");
+    var collection=dbo.collection('userlist');
+    var collection2=dbo.collection('student_notices');
+    collection2.find({}).toArray(function(err,docs){
       if(err)
         console.log("error in find");
       var body=req.body;
       var password=body.oldPass;
       var newPass=body.newPass;
       var confirmPass=body.confirmPass;  
-      collection.find({username:req.user[0].username},function(err,result){
+      collection.find({username:req.user[0].username}).toArray(function(err,result){
         if(err)
           console.log("error");//console.log(result);
         bcrypt.compare(password,result[0].password,function(err,result1){
@@ -378,7 +385,7 @@ router.post('/changePass',function(req,res){
                 bcrypt.hash(newPass, saltRounds, function(err, hash){
                   if(err)
                     console.log("error in hashing");
-                  collection.update({username:req.user[0].username},{$set:{password:hash}},function(err){
+                  collection.updateOne({username:req.user[0].username},{$set:{password:hash}},function(err){
                     if(err)
                       console.log("error in updating password");
                     req.user[0].password=hash;  
@@ -406,19 +413,20 @@ router.post('/changeUser_o',function(req,res){
   else 
   {
     var db=req.db;
-    var collection=db.get('userlist');
-    var collection2=db.get('other_notices');
+    var dbo=db.db("temp_project");
+    var collection=dbo.collection('userlist');
+    var collection2=dbo.collection('other_notices');
     var username=req.body.username;
-    collection2.find({},function(err,docs){
+    collection2.find({}).toArray(function(err,docs){
       if(err)
         console.log("error in find");
-        collection.find({username:username},function(err,result){
+        collection.find({username:username}).toArray(function(err,result){
           if(err)
             console.log("error in fetching user.");
           if(result.length!=0)
             res.render('other_notice',{notices:docs,code:2,username}); //Username already Taken.
           else{
-            collection.update({username:req.user[0].username},{$set:{username:username}},function(err){
+            collection.updateOne({username:req.user[0].username},{$set:{username:username}},function(err){
               if(err)
                 console.log("Error in updating Username");
                 req.user[0].username=username;
@@ -439,13 +447,14 @@ router.post('/changeEmail_o',function(req,res){
   else 
   {
     var db=req.db;
-    var collection=db.get('userlist');
-    var collection2=db.get('other_notices');
+    var dbo=db.db("temp_project");
+    var collection=dbo.collection('userlist');
+    var collection2=dbo.collection('other_notices');
     var email=req.body.email;
-    collection2.find({},function(err,docs){
+    collection2.find({}).toArray(function(err,docs){
       if(err)
         console.log("error in find");
-      collection.find({email:email},function(err,result){
+      collection.find({email:email}).toArray(function(err,result){
         if(err)
             console.log("error in fetching user.");
         if(result.length!=0)  
@@ -456,7 +465,7 @@ router.post('/changeEmail_o',function(req,res){
           if(result1!=email)
               res.render("other_notice",{notices:docs,code:10,email});   //not a valid email-id
           else{
-            collection.update({username:req.user[0].username},{$set:{email:email}},function(err){
+            collection.updateOne({username:req.user[0].username},{$set:{email:email}},function(err){
               if(err)
                   console.log("Error in updating Email-Id");
                 req.user[0].email=email;  
@@ -476,16 +485,17 @@ router.post('/changePass_o',function(req,res){
   else 
   {
     var db=req.db;
-    var collection=db.get('userlist');
-    var collection2=db.get('other_notices');
-    collection2.find({},function(err,docs){
+    var dbo=db.db("temp_project");
+    var collection=dbo.collection('userlist');
+    var collection2=dbo.collection('other_notices');
+    collection2.find({}).toArray(function(err,docs){
       if(err)
         console.log("error in find");
       var body=req.body;
       var password=body.oldPass;
       var newPass=body.newPass;
       var confirmPass=body.confirmPass;  
-      collection.find({username:req.user[0].username},function(err,result){
+      collection.find({username:req.user[0].username}).toArray(function(err,result){
         if(err)
           console.log("error");//console.log(result);
         bcrypt.compare(password,result[0].password,function(err,result1){
@@ -505,7 +515,7 @@ router.post('/changePass_o',function(req,res){
                 bcrypt.hash(newPass, saltRounds, function(err, hash){
                   if(err)
                     console.log("error in hashing");
-                  collection.update({username:req.user[0].username},{$set:{password:hash}},function(err){
+                  collection.updateOne({username:req.user[0].username},{$set:{password:hash}},function(err){
                     if(err)
                       console.log("error in updating password");
                     req.user[0].password=hash;
@@ -573,10 +583,11 @@ passport.use('admin',new LocalStrategy({
 },
   function(req,username, password, done) {
     var db=req.db;
-    var collection=db.get('admin');
+    var dbo=db.db("temp_project");
+    var collection=dbo.collection('admin');
       collection.find({
         username: username
-      }, function(err, user) {  
+      }).toArray(function(err, user) {  
         if (err) {
           return done(err);
         }
@@ -644,8 +655,9 @@ router.post('/admin_changePassword',function(req,res){
   var newPass=body.newPass;
   var confirmPass=body.confirmPass;
   var db=req.db;
-  var collection=db.get('admin');
-  collection.find({},function(err,result){
+  var dbo=db.db("temp_project");
+  var collection=dbo.collection('admin');
+  collection.find({}).toArray(function(err,result){
     if(err)
       console.log("error in finding admin");
       bcrypt.compare(password,result[0].password , function(err, result1) {     //check for correct current password
@@ -668,7 +680,7 @@ router.post('/admin_changePassword',function(req,res){
               bcrypt.hash(newPass, saltRounds, function(err, hash){
                 if(err)
                   console.log("error in hashing new password");
-                collection.update({password:result[0].password},{$set:{password:hash}},function(err){
+                collection.updateOne({password:result[0].password},{$set:{password:hash}},function(err){
                   if(err)
                     console.log("error in updation");
                   req.user[0].password=hash;  
@@ -700,8 +712,9 @@ router.post('/admin_changeUsername',function(req,res){
   else  
   {
     var db=req.db;
-    var collection=db.get('admin');
-    collection.update({username:req.user[0].username},{$set:{username:req.body.username}},function(err){
+    var dbo=db.db("temp_project");
+    var collection=dbo.collection('admin');
+    collection.updateOne({username:req.user[0].username},{$set:{username:req.body.username}},function(err){
       if(err)
         console.log("error in username updation!");
       req.user[0].username=req.body.username;
@@ -733,8 +746,9 @@ router.get('/admin_snotice',function(req,res){      //Student Notice
   else  
   {
     var db=req.db;
-    var collection=db.get('student_notices');
-    collection.find({},function(err,result){
+    var dbo=db.db("temp_project");
+    var collection=dbo.collection('student_notices');
+    collection.find({}).toArray(function(err,result){
       if(err)
         console.log("Error in fetching data");
         res.render('admin_board',{notices:result,title:"Student Notices",code:0});
@@ -748,8 +762,9 @@ router.get('/admin_tnotice',function(req,res){      //other Notice
   else  
   {
     var db=req.db;
-    var collection=db.get('other_notices');
-    collection.find({},function(err,result){
+    var dbo=db.db("temp_project");
+    var collection=dbo.collection('other_notices');
+    collection.find({}).toArray(function(err,result){
       if(err)
         console.log("Error in fetching data");
         res.render('admin_boardOthr',{notices:result,title:"Teacher and Staff Notices",code:0});
@@ -764,8 +779,9 @@ router.get('/admin_rnotice',function(req,res){      //Request Notice
   else  
   {
     var db=req.db;
-    var collection=db.get('notice_requests');
-    collection.find({},function(err,result){
+    var dbo=db.db("temp_project");
+    var collection=dbo.collection('notice_requests');
+    collection.find({}).toArray(function(err,result){
       if(err)
         console.log("Error in fetching data");
         res.render('notice_requests',{notices:result,title:"Notice Requests",code:0});
@@ -782,14 +798,15 @@ router.post('/remove_snotice',function(req,res){      //for deleting a notice in
   else
   {
     var db=req.db;
-    var collection=db.get('student_notices');
+    var dbo=db.db("temp_project");
+    var collection=dbo.collection('student_notices');
     //console.log(req.body.subject1);
     var myobj={subject:req.body.subject1};
-    collection.remove(myobj,function(err,result){
+    collection.deleteOne(myobj,function(err,result){
       if(err)
         console.log("Error in removing notice;"); 
 
-      collection.find({},function(err,docs){
+      collection.find({}).toArray(function(err,docs){
         if(err)
           console.log("Error in fetching data");
           if(result.result.n==0)
@@ -810,14 +827,15 @@ router.post('/remove_onotice',function(req,res){        //for deleting a notice 
   else
   {
     var db=req.db;
-    var collection=db.get('other_notices');
+    var dbo=db.db("temp_project");
+    var collection=dbo.collection('other_notices');
     //console.log(req.body.subject);
     var myobj={subject:req.body.subject1};
-    collection.remove(myobj,function(err,result){
+    collection.deleteOne(myobj,function(err,result){
       if(err)
         console.log("Error in removing notice;");
 
-      collection.find({},function(err,docs){
+      collection.find({}).toArray(function(err,docs){
         if(err)
           console.log("Error in fetching data");
           if(result.result.n==0)
@@ -839,14 +857,15 @@ router.post('/remove_request',function(req,res){        //for deleting a notice 
   else
   {
     var db=req.db;
-    var collection=db.get('notice_requests');
+    var dbo=db.db("temp_project");
+    var collection=dbo.collection('notice_requests');
     //console.log(req.body.subject);
     var myobj={subject:req.body.subject1};
-    collection.remove(myobj,function(err,result){
+    collection.deleteOne(myobj,function(err,result){
       if(err)
         console.log("Error in removing notice;");
 
-      collection.find({},function(err,docs){
+      collection.find({}).toArray(function(err,docs){
         if(err)
           console.log("Error in fetching data");
           if(result.result.n==0)
@@ -870,14 +889,15 @@ router.post('/move_snotice',function(req,res){
   else
   {
     var db=req.db;
-    var collection=db.get('notice_requests');
+    var dbo=db.db("temp_project");
+    var collection=dbo.collection('notice_requests');
     var subject=req.body.subject2;
-    collection.find({subject:subject},function(err,docs){
+    collection.find({subject:subject}).toArray(function(err,docs){
       if(err)
         console.log("Error in fetching data from student notice while moving.");
       if(docs.length==0)//dobara find lagao
       {
-        collection.find({},function(err,result){
+        collection.find({}).toArray(function(err,result){
           if(err)
             console.log('error in finding');
           res.render('notice_requests',{notices:result,title:"Notice Requests",code:1});
@@ -889,19 +909,21 @@ router.post('/move_snotice',function(req,res){
         var myobj={
           subject:subject,
           body:docs[0].body,
-          path:docs[0].path
+          path:docs[0].path,
+          name:docs[0].name
         };
-        var collection2=db.get('student_notices');
-        collection2.insert(myobj,function(err,result1){
+        var dbo=db.db("temp_project");
+        var collection2=dbo.collection('student_notices');
+        collection2.insertOne(myobj,function(err,result1){
           if(err)
             console.log("error in inserting while moving");
         });
-        collection.remove({subject:subject},function(err,result2){
+        collection.deleteOne({subject:subject},function(err,result2){
           if(err)
             console.log("error in removing while moving");
           if(result2.result.n!=0)
           {
-            collection.find({},function(err,result){
+            collection.find({}).toArray(function(err,result){
               if(err)
                 console.log('error in finding');
                 res.render('notice_requests',{notices:result,title:"Notice Requests",code:3});
@@ -926,14 +948,15 @@ router.post('/move_onotice',function(req,res){
   else
   {
     var db=req.db;
-    var collection=db.get('notice_requests');
+    var dbo=db.db("temp_project");
+    var collection=dbo.collection('notice_requests');
     var subject=req.body.subject3;
-    collection.find({subject:subject},function(err,docs){
+    collection.find({subject:subject}).toArray(function(err,docs){
       if(err)
         console.log("Error in fetching data from student notice while moving.");
       if(docs.length==0)//dobara find lagao
       {
-        collection.find({},function(err,result){
+        collection.find({}).toArray(function(err,result){
           if(err)
             console.log('error in finding');
           res.render('notice_requests',{notices:result,title:"Notice Requests",code:1});
@@ -945,19 +968,21 @@ router.post('/move_onotice',function(req,res){
         var myobj={
           subject:subject,
           body:docs[0].body,
-          path:docs[0].path
+          path:docs[0].path,
+          name:docs[0].name
         };
-        var collection2=db.get('other_notices');
-        collection2.insert(myobj,function(err,result1){
+        var dbo=db.db("temp_project");
+        var collection2=dbo.collection('other_notices');
+        collection2.insertOne(myobj,function(err,result1){
           if(err)
             console.log("error in inserting while moving");
         });
-        collection.remove({subject:subject},function(err,result2){
+        collection.deleteOne({subject:subject},function(err,result2){
           if(err)
             console.log("error in removing while moving");
           if(result2.result.n!=0)
           {
-            collection.find({},function(err,result){
+            collection.find({}).toArray(function(err,result){
               if(err)
                 console.log('error in finding');
                 res.render('notice_requests',{notices:result,title:"Notice Requests",code:3});
@@ -978,8 +1003,9 @@ router.get('/admin_userlist',function(req,res){
   else
   {
     var db=req.db;
-    var collection=db.get('userlist');
-    collection.find({},function(err,result){
+    var dbo=db.db("temp_project");
+    var collection=dbo.collection('userlist');
+    collection.find({}).toArray(function(err,result){
       if(err)
         console.log("Error in fetching data");
       res.render('userlist',{userlist:result,title:"Registered Users",code:0});
@@ -994,12 +1020,13 @@ router.post('/activate',function(req,res){
   else
   {
     var db=req.db;
-    var collection=db.get('userlist');
+    var dbo=db.db("temp_project");
+    var collection=dbo.collection('userlist');
     var username=req.body.usernameA;
-    collection.find({},function(err,docs){
+    collection.find({}).toArray(function(err,docs){
       if(err)
         console.log("error in finding user from userlist");  
-      collection.find({username:username},function(err,result){
+      collection.find({username:username}).toArray(function(err,result){
         if(err)
           console.log("error in finding user from userlist");
         if(result.length==0)
@@ -1007,10 +1034,10 @@ router.post('/activate',function(req,res){
         else if(result[0].status=="activated")  
           res.render('userlist',{userlist:docs,title:"Registered Users",code:2});   //User already activated
         else{
-          collection.update({username:username},{$set:{status:"activated"}},function(err){
+          collection.updateOne({username:username},{$set:{status:"activated"}},function(err){
             if(err)
               console.log("error in activating status.");
-          collection.find({},function(err,docs1){
+          collection.find({}).toArray(function(err,docs1){
             if(err)
               console.log("error in finding user from userlist");
             res.render('userlist',{userlist:docs1,title:"Registered Users",code:3}); //Status successfully updated  
@@ -1031,12 +1058,13 @@ router.post('/deactivate',function(req,res){
   else
   {
     var db=req.db;
-    var collection=db.get('userlist');
+    var dbo=db.db("temp_project");
+    var collection=dbo.collection('userlist');
     var username=req.body.usernameD;
-    collection.find({},function(err,docs){
+    collection.find({}).toArray(function(err,docs){
       if(err)
         console.log("error in finding user from userlist");  
-      collection.find({username:username},function(err,result){
+      collection.find({username:username}).toArray(function(err,result){
         if(err)
           console.log("error in finding user from userlist");
         if(result.length==0)
@@ -1044,11 +1072,11 @@ router.post('/deactivate',function(req,res){
         else if(result[0].status=="deactivated")  
           res.render('userlist',{userlist:docs,title:"Registered Users",code:4});   //User already activated
         else{
-          collection.update({username:username},{$set:{status:"deactivated"}},function(err){
+          collection.updateOne({username:username},{$set:{status:"deactivated"}},function(err){
             if(err)
               console.log("error in activating status.");
           
-          collection.find({},function(err,docs1){
+          collection.find({}).toArray(function(err,docs1){
             if(err)
               console.log("error in finding user from userlist");
             res.render('userlist',{userlist:docs1,title:"Registered Users",code:3}); //Status successfully updated  
@@ -1068,22 +1096,23 @@ router.post('/remove',function(req,res){
   else
   {
     var db=req.db;
-    var collection=db.get('userlist');
+    var dbo=db.db("temp_project");
+    var collection=dbo.collection('userlist');;
     var username=req.body.usernameR;
-    collection.find({},function(err,docs){
+    collection.find({}).toArray(function(err,docs){
       if(err)
         console.log("error in finding user from userlist");  
-      collection.find({username:username},function(err,result){
+      collection.find({username:username}).toArray(function(err,result){
         if(err)
           console.log("error in finding user from userlist");
         if(result.length==0)
           res.render('userlist',{userlist:docs,title:"Registered Users",code:1});   //Invalid username
         else{
-          collection.remove({username:username},function(err){
+          collection.deleteOne({username:username},function(err){
             if(err)
               console.log("error in removing user.");
           
-          collection.find({},function(err,docs1){
+          collection.find({}).toArray(function(err,docs1){
             if(err)
               console.log("error in finding user from userlist");
             res.render('userlist',{userlist:docs1,title:"Registered Users",code:5}); //User was successfully removed 
@@ -1095,7 +1124,60 @@ router.post('/remove',function(req,res){
   }
 });
 
+//---------------------------------------------------------show document---------------------------------------------------------------//
+router.post('/show_r',function(req,res){
+  var db=req.db;
+  var dbo=db.db('temp_project');
+  var collection=dbo.collection('notice_requests');
+  console.log(req.body.subject);
+  collection.find({subject:req.body.subject}).toArray(function(err,documents){
+    if (err) console.error(err);
+    var file=documents[0].name;
+      fs.writeFile(file, documents[0].path.file_data.buffer, function(err){
+          if (err) throw err;
+          res.download(file);
+          console.log('Sucessfully saved!');
+      }); 
+     
+  });
+});
 
+
+router.post('/show_s',function(req,res){
+  var db=req.db;
+  var dbo=db.db('temp_project');
+  var collection=dbo.collection('student_notices');
+  console.log(req.body.subject);
+  collection.find({subject:req.body.subject}).toArray(function(err,documents){
+    if (err) console.error(err);
+    var file=documents[0].name;
+      fs.writeFile(file, documents[0].path.file_data.buffer, function(err){
+          if (err) throw err;
+          res.download(file);
+          console.log('Sucessfully saved!');
+      }); 
+     
+  });
+});
+
+
+
+router.post('/show_o',function(req,res){
+  var db=req.db;
+  var dbo=db.db('temp_project');
+  var collection=dbo.collection('other_notices');
+  console.log(req.body.subject);
+  collection.find({subject:req.body.subject}).toArray(function(err,documents){
+    if (err) console.error(err);
+    var file=documents[0].name;
+      fs.writeFile(file, documents[0].path.file_data.buffer, function(err){
+          if (err) throw err;
+          res.download(file);
+          console.log('Sucessfully saved!');
+      }); 
+     
+  });
+});
 
 
 
